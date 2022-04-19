@@ -4,10 +4,12 @@
 
 #include "OSMManager.h"
 
-OSMManager::OSMManager() {
+OSMManager::OSMManager()
+{
 }
 
-OSMManager::OSMManager(std::string osmFilePath): m_osmFilePath(osmFilePath) {
+OSMManager::OSMManager(std::string osmFilePath) : m_osmFilePath(osmFilePath)
+{
     std::string keyString = "highway";
     std::set<std::string> remainedLayerValuesSe;
     remainedLayerValuesSe.insert("motorway");
@@ -25,16 +27,18 @@ OSMManager::OSMManager(std::string osmFilePath): m_osmFilePath(osmFilePath) {
     this->m_defaultLaneNum.insert(std::make_pair("residential", 1));
 
     this->m_remainedLayerValuesSet = remainedLayerValuesSe;
-    this->m_osmHandler             = std::make_shared<OSMHandler>(keyString, this->m_remainedLayerValuesSet);
+    this->m_osmHandler = std::make_shared<OSMHandler>(keyString, this->m_remainedLayerValuesSet);
 
     this->m_ptrGlobalIdGenerator = OSMGenerateGlobalId::getInstance();
 }
 
-OSMManager::~OSMManager() {
+OSMManager::~OSMManager()
+{
     this->m_ptrGlobalIdGenerator->deleteInstance();
 }
 
-void OSMManager::initialize() {
+void OSMManager::initialize()
+{
     /// TODO Step1:  config parameters
 
     /// Step2:  extract road Info
@@ -56,61 +60,58 @@ void OSMManager::initialize() {
 
     osmium::apply(readRoadInfo, location_handler, *this->m_osmHandler);
     readRoadInfo.close();
-
-    ///< start processing osmFile
-    this->run();
 }
 
-void OSMManager::run() {
+void OSMManager::run()
+{
     ///< step1: mergeWaysToLine (and output osm file)
     this->m_osmHandler->linkWays2Lines();
-    this->generateOsmFile("../outputOSM/01_link_ways_");
+    this->generateOsmFile("../output/01_link_ways_");
 
     ///< step2: buffer method (process lines layer by layer)
     this->m_osmHandler->generateSimplifiedLines();
-    this->generateOsmFile("../outputOSM/02_first_buffer_");
-    this->m_osmHandler->printSimplifiedNetwork();
+    this->generateOsmFile("../output/02_first_buffer_");
 
     ///< step3: buffer method (process all layer lines)
     this->m_osmHandler->reBufferAllLayerLines();
-    this->generateOsmFile("../outputOSM/03_re_buffer_");
+    this->generateOsmFile("../output/03_re_buffer_");
 
     ///< step4: order node refs.
     this->m_osmHandler->orderWayNodeRef();
 
     /// step5: extend lines at lines' tail and head end
     this->m_osmHandler->extendLines();
-    this->generateOsmFile("../outputOSM/05_extend_");
+    this->generateOsmFile("../output/05_extend_");
 
     ///<step6: calculate Intersection Info
     std::map<Road::SubWay::id_t, std::vector<Road::Node::id_t>> interSectionInfo = this->m_osmHandler->calIntersectionPoints();
 
     ///< step7: insert intersection points to subways
     this->m_osmHandler->insertIntersectionPoints(interSectionInfo);
-    this->generateOsmFile("../outputOSM/07_insert_");
-    this->m_osmHandler->printAllIntersection();
+    this->generateOsmFile("../output/07_insert_");
 
     ///< step8: delete all Redundant road
     this->m_osmHandler->deleteRedundantRoad();
-    this->generateOsmFile("../outputOSM/08_del_redundant_");
+    this->generateOsmFile("../output/08_del_redundant_");
 
     ///< step9: merge close intersections
     this->m_osmHandler->mergeNeighborIntersections();
-    this->generateOsmFile("../outputOSM/09_merge_");
+    this->generateOsmFile("../output/09_merge_");
 
     ///< step10: cluster
     this->m_osmHandler->cleanNetwork();
-    this->generateOsmFile("../outputOSM/10_clean_");
+    this->generateOsmFile("../output/10_clean_");
 
     /// TODO < step11: add ramp template intersections
     void buildRamp();
 
     ///< step12: generate final osmFile
-    this->generateFinialOsmFile("../outputOSM/12_final_");
-
+    this->generateFinialOsmFile("../output/12_final_");
+    std::cout << "done!" << std::endl;
 }
 
-void OSMManager::generateOsmFile(std::string osmFileNamePrefix) {
+void OSMManager::generateOsmFile(std::string osmFileNamePrefix)
+{
     const std::size_t buffer_size = 10240;
     osmium::memory::Buffer tmp_nodeBuffer{buffer_size, osmium::memory::Buffer::auto_grow::yes};
     osmium::memory::Buffer tmp_wayBuffer{buffer_size, osmium::memory::Buffer::auto_grow::yes};
@@ -128,30 +129,15 @@ void OSMManager::generateOsmFile(std::string osmFileNamePrefix) {
     this->writeLayerByLayer("all", path.c_str(), tmp_nodeBuffer, tmp_wayBuffer, tmp_relationBuffer);
 }
 
-void OSMManager::generateOsmFileForEachLayer(std::string osmFileNamePrefix) {
-    for (const auto& layerName : this->m_remainedLayerValuesSet) {
-        const std::size_t buffer_size = 10240;
-        osmium::memory::Buffer tmp_nodeBuffer{buffer_size, osmium::memory::Buffer::auto_grow::yes};
-        osmium::memory::Buffer tmp_wayBuffer{buffer_size, osmium::memory::Buffer::auto_grow::yes};
-        osmium::memory::Buffer tmp_relationBuffer{buffer_size, osmium::memory::Buffer::auto_grow::yes};
 
-        this->generateNodesForEachLayer(layerName, tmp_nodeBuffer);
-
-        this->generateWaysForEachLayer(layerName, tmp_wayBuffer);
-
-        this->generateRelationForEachLayer(layerName, tmp_relationBuffer);
-
-        std::string path = osmFileNamePrefix + layerName + ".osm";
-        this->writeLayerByLayer("all", path.c_str(), tmp_nodeBuffer, tmp_wayBuffer, tmp_relationBuffer);
-    }
-}
-
-void OSMManager::generateNodes(osmium::memory::Buffer& tmp_nodeBuffer) {
-    for (const auto& nodeInfo : this->m_osmHandler->getAllNodeId2NodeObj()) {
+void OSMManager::generateNodes(osmium::memory::Buffer &tmp_nodeBuffer)
+{
+    for (const auto &nodeInfo: this->m_osmHandler->getAllNodeId2NodeObj())
+    {
         {
             osmium::builder::NodeBuilder builder{tmp_nodeBuffer};
-            builder.add_user("xiaorui");
-            osmium::Node& obj = builder.object();
+            builder.set_user("tsmm");
+            osmium::Node &obj = builder.object();
 
             obj.set_id(nodeInfo.first);
             obj.set_uid(nodeInfo.first);
@@ -161,14 +147,18 @@ void OSMManager::generateNodes(osmium::memory::Buffer& tmp_nodeBuffer) {
     }
 }
 
-void OSMManager::generateWays(osmium::memory::Buffer& tmp_wayBuffer) {
-    for (const auto& lineLayerInfoDic : this->m_osmHandler->getAggregatedLineInfoMap()) {
-        for (const auto& line : lineLayerInfoDic.second) {
-            for (const auto& way : line.second->getWayObjs()) {
+void OSMManager::generateWays(osmium::memory::Buffer &tmp_wayBuffer)
+{
+    for (const auto &lineLayerInfoDic: this->m_osmHandler->getAggregatedLineInfoMap())
+    {
+        for (const auto &line: lineLayerInfoDic.second)
+        {
+            for (const auto &way: line.second->getWayObjs())
+            {
                 {
                     osmium::builder::WayBuilder builder{tmp_wayBuffer};
-                    builder.add_user("xiaorui");
-                    osmium::Way& obj = builder.object();
+                    builder.set_user("tsmm");
+                    osmium::Way &obj = builder.object();
 
                     obj.set_id(way->getWayId());
                     obj.set_uid(way->getWayId());
@@ -184,15 +174,18 @@ void OSMManager::generateWays(osmium::memory::Buffer& tmp_wayBuffer) {
     }
 }
 
-void OSMManager::generateRelation(osmium::memory::Buffer& tmp_relationBuffer) {
+void OSMManager::generateRelation(osmium::memory::Buffer &tmp_relationBuffer)
+{
 }
 
-void OSMManager::generateNodesForEachLayer(const std::string& layerName, osmium::memory::Buffer& tmp_nodeBuffer) {
-    for (const auto& nodeInfo : this->m_osmHandler->getAllNodeId2NodeObj()) {
+void OSMManager::generateNodesForEachLayer(const std::string &layerName, osmium::memory::Buffer &tmp_nodeBuffer)
+{
+    for (const auto &nodeInfo: this->m_osmHandler->getAllNodeId2NodeObj())
+    {
         {
             osmium::builder::NodeBuilder builder{tmp_nodeBuffer};
-            builder.add_user("xiaorui");
-            osmium::Node& obj = builder.object();
+            builder.set_user("tsmm");
+            osmium::Node &obj = builder.object();
 
             obj.set_id(nodeInfo.first);
             obj.set_uid(nodeInfo.first);
@@ -201,39 +194,25 @@ void OSMManager::generateNodesForEachLayer(const std::string& layerName, osmium:
         tmp_nodeBuffer.commit();
     }
 
-    //    ///< process node layer by layer
-    //    for (const auto& nodeLayerInfoDic : this->m_osmHandler->getAggregatedNodeInfoMap()) {
-    //        if (nodeLayerInfoDic.first != layerName) {
-    //            continue;
-    //        }
-    //        ///< some points will be added multiple times since they are belonded to multiple layer
-    //        for (const auto& nodeInfo : nodeLayerInfoDic.second) {
-    //            {
-    //                osmium::builder::NodeBuilder builder{tmp_nodeBuffer};
-    //                builder.add_user("xiaorui");
-    //                osmium::Node& obj = builder.object();
-    //
-    //                obj.set_id(nodeInfo.first);
-    //                obj.set_uid(nodeInfo.first);
-    //                obj.set_location(nodeInfo.second->getOsmLocation());
-    //            }
-    //            tmp_nodeBuffer.commit();
-    //        }
-    //    }
 }
 
-void OSMManager::generateWaysForEachLayer(const std::string& layerName, osmium::memory::Buffer& tmp_wayBuffer) {
-    for (const auto& lineLayerInfoDic : this->m_osmHandler->getAggregatedLineInfoMap()) {
-        if (lineLayerInfoDic.first != layerName) {
+void OSMManager::generateWaysForEachLayer(const std::string &layerName, osmium::memory::Buffer &tmp_wayBuffer)
+{
+    for (const auto &lineLayerInfoDic: this->m_osmHandler->getAggregatedLineInfoMap())
+    {
+        if (lineLayerInfoDic.first != layerName)
+        {
             continue;
         }
 
-        for (const auto& line : lineLayerInfoDic.second) {
-            for (const auto& way : line.second->getWayObjs()) {
+        for (const auto &line: lineLayerInfoDic.second)
+        {
+            for (const auto &way: line.second->getWayObjs())
+            {
                 {
                     osmium::builder::WayBuilder builder{tmp_wayBuffer};
-                    builder.add_user("xiaorui");
-                    osmium::Way& obj = builder.object();
+                    builder.set_user("tsmm");
+                    osmium::Way &obj = builder.object();
 
                     obj.set_id(way->getWayId());
                     obj.set_uid(way->getWayId());
@@ -247,84 +226,63 @@ void OSMManager::generateWaysForEachLayer(const std::string& layerName, osmium::
     }
 }
 
-void OSMManager::generateRelationForEachLayer(const std::string& layerName, osmium::memory::Buffer& tmp_relationBuffer) {
-}
 
-void OSMManager::addWayTagsForEachLayer(osmium::memory::Buffer& tmp_wayBuffer,
-                                        osmium::builder::Builder* builder,
-                                        const std::map<std::string, std::string>& wayTagsMap) {
+void OSMManager::addWayTagsForEachLayer(osmium::memory::Buffer &tmp_wayBuffer,
+                                        osmium::builder::Builder *builder,
+                                        const std::map<std::string, std::string> &wayTagsMap)
+{
     // add way nodeTags
     osmium::builder::TagListBuilder tl_builder{tmp_wayBuffer, builder};
     // add road level tag
-    for (const auto& tags : wayTagsMap) {
+    for (const auto &tags: wayTagsMap)
+    {
         tl_builder.add_tag(tags.first, tags.second);
     }
 
-    //    tl_builder.add_tag(tagRoaldLevelKey, tagRoaldLevelValue);
-    //    tl_builder.add_tag(tagLaneKey, tagLaneValue);
-    //    if (this->m_oneWayIds.count(wayId)) {
-    //        tl_builder.add_tag("oneway", "yes");
-    //    }
 }
 
-void OSMManager::addWayNodeRefsForEachLayer(osmium::memory::Buffer& tmp_wayBuffer,
-                                            osmium::builder::Builder* builder,
-                                            const std::vector<OSMNode::ptr>& nodeRefsObjs) {
+void OSMManager::addWayNodeRefsForEachLayer(osmium::memory::Buffer &tmp_wayBuffer,
+                                            osmium::builder::Builder *builder,
+                                            const std::vector<OSMNode::ptr> &nodeRefsObjs)
+{
     osmium::builder::WayNodeListBuilder wayNodeListBuilder{tmp_wayBuffer, builder};
-    for (const auto& nodeObj : nodeRefsObjs) {
-        osmium::Location node   = nodeObj->getOsmLocation();
+    for (const auto &nodeObj: nodeRefsObjs)
+    {
+        osmium::Location node = nodeObj->getOsmLocation();
         Road::Node::id_t nodeId = nodeObj->getNodeId();
         osmium::NodeRef nodeRef{long(nodeId), node};
         wayNodeListBuilder.add_node_ref(nodeRef);
     }
 }
 
-void OSMManager::write(const std::string writeItem, const char* outputPath) {
-    if (remove(outputPath) != 0)
-        perror("Error deleting file");
-    else
-        puts("File successfully deleted");
-
-    osmium::io::File output_file{outputPath};
-    osmium::io::Writer writer{output_file};
-    if (writeItem == "nodes") {
-        writer(std::move(this->m_nodeBuffer));
-
-    } else if (writeItem == "ways") {
-        writer(std::move(this->m_wayBuffer));
-    } else if (writeItem == "all") {
-        writer(std::move(this->m_nodeBuffer));
-        //        writer(std::move(this->m_wayBuffer));
-        //        writer(std::move(this->m_relationBuffer));
-    }
-    writer.close();
-}
-
 void OSMManager::writeLayerByLayer(std::string writeItem,
-                                   const char* outputPath,
-                                   osmium::memory::Buffer& tmp_nodeBuffer,
-                                   osmium::memory::Buffer& tmp_wayBuffer,
-                                   osmium::memory::Buffer& tmp_relationBuffer) {
+                                   const char *outputPath,
+                                   osmium::memory::Buffer &tmp_nodeBuffer,
+                                   osmium::memory::Buffer &tmp_wayBuffer,
+                                   osmium::memory::Buffer &tmp_relationBuffer)
+{
     if (remove(outputPath) != 0)
         perror("Error deleting file");
-    else
-        puts("File successfully deleted");
 
     osmium::io::File output_file{outputPath};
     osmium::io::Writer writer{output_file};
-    if (writeItem == "nodes") {
+    if (writeItem == "nodes")
+    {
         writer(std::move(tmp_nodeBuffer));
 
-    } else if (writeItem == "ways") {
+    } else if (writeItem == "ways")
+    {
         writer(std::move(tmp_wayBuffer));
-    } else if (writeItem == "all") {
+    } else if (writeItem == "all")
+    {
         writer(std::move(tmp_nodeBuffer));
         writer(std::move(tmp_wayBuffer));
         writer(std::move(tmp_relationBuffer));
     }
     writer.close();
 }
-void OSMManager::generateFinialOsmFile(std::string osmFileNamePrefix) {
+void OSMManager::generateFinialOsmFile(std::string osmFileNamePrefix)
+{
     const std::size_t buffer_size = 10240;
     osmium::memory::Buffer tmp_nodeBuffer{buffer_size, osmium::memory::Buffer::auto_grow::yes};
     osmium::memory::Buffer tmp_wayBuffer{buffer_size, osmium::memory::Buffer::auto_grow::yes};
@@ -340,23 +298,29 @@ void OSMManager::generateFinialOsmFile(std::string osmFileNamePrefix) {
 
     std::string path = osmFileNamePrefix + "_allLayer" + ".osm";
     this->writeLayerByLayer("all", path.c_str(), tmp_nodeBuffer, tmp_wayBuffer, tmp_relationBuffer);
+    std::cout << "step 12/12 generate final osm File is done" << std::endl;
 }
-void OSMManager::generateFinalNodes(osmium::memory::Buffer& tmp_nodeBuffer) {
-    for (const auto& nodeInfo : this->m_osmHandler->getAllNodeId2NodeObj()) {
+void OSMManager::generateFinalNodes(osmium::memory::Buffer &tmp_nodeBuffer)
+{
+    for (const auto &nodeInfo: this->m_osmHandler->getAllNodeId2NodeObj())
+    {
         {
             osmium::builder::NodeBuilder builder{tmp_nodeBuffer};
-            builder.add_user("xiaorui");
-            osmium::Node& obj = builder.object();
+            builder.set_user("tsmm");
+            osmium::Node &obj = builder.object();
 
             obj.set_id(nodeInfo.first);
             obj.set_uid(nodeInfo.first);
             obj.set_location(nodeInfo.second->getOsmLocation());
 
-            if (this->m_osmHandler->getAllIntersectionNodeIdSet().count(nodeInfo.first)) {
+            if (this->m_osmHandler->getAllIntersectionNodeIdSet().count(nodeInfo.first))
+            {
                 if (this->m_osmHandler->getAllNodeId2NodeObj().at(nodeInfo.first)->getIntersectionLevel().size() == 1 and
-                    this->m_osmHandler->getAllNodeId2NodeObj().at(nodeInfo.first)->getIntersectionLevel().count("residential")) {
+                    this->m_osmHandler->getAllNodeId2NodeObj().at(nodeInfo.first)->getIntersectionLevel().count("residential"))
+                {
                     continue;
-                } else {
+                } else
+                {
                     osmium::builder::TagListBuilder tl_builder{tmp_nodeBuffer, &builder};
                     tl_builder.add_tag("highway", "traffic_signals");
                     tl_builder.add_tag("traffic_signals", "traffic_lights");
@@ -367,14 +331,18 @@ void OSMManager::generateFinalNodes(osmium::memory::Buffer& tmp_nodeBuffer) {
         tmp_nodeBuffer.commit();
     }
 }
-void OSMManager::generateFinalWays(osmium::memory::Buffer& tmp_wayBuffer) {
-    for (const auto& lineLayerInfoDic : this->m_osmHandler->getAggregatedLineInfoMap()) {
-        for (const auto& line : lineLayerInfoDic.second) {
-            for (const auto& way : line.second->getWayObjs()) {
+void OSMManager::generateFinalWays(osmium::memory::Buffer &tmp_wayBuffer)
+{
+    for (const auto &lineLayerInfoDic: this->m_osmHandler->getAggregatedLineInfoMap())
+    {
+        for (const auto &line: lineLayerInfoDic.second)
+        {
+            for (const auto &way: line.second->getWayObjs())
+            {
                 {
                     osmium::builder::WayBuilder builder{tmp_wayBuffer};
-                    builder.add_user("xiaorui");
-                    osmium::Way& obj = builder.object();
+                    builder.set_user("tsmm");
+                    osmium::Way &obj = builder.object();
 
                     obj.set_id(way->getWayId());
                     obj.set_uid(way->getWayId());
@@ -389,35 +357,42 @@ void OSMManager::generateFinalWays(osmium::memory::Buffer& tmp_wayBuffer) {
         }
     }
 }
-void OSMManager::generateFinalRelation(osmium::memory::Buffer& tmp_relationBuffer) {
+void OSMManager::generateFinalRelation(osmium::memory::Buffer &tmp_relationBuffer)
+{
 }
-void OSMManager::addFinalWayTagsForEachLayer(osmium::memory::Buffer& tmp_wayBuffer,
-                                             osmium::builder::Builder* builder,
-                                             const std::map<std::string, std::string>& wayTagsMap) {
+void OSMManager::addFinalWayTagsForEachLayer(osmium::memory::Buffer &tmp_wayBuffer,
+                                             osmium::builder::Builder *builder,
+                                             const std::map<std::string, std::string> &wayTagsMap)
+{
     // add way nodeTags
     osmium::builder::TagListBuilder tl_builder{tmp_wayBuffer, builder};
 
     std::map<std::string, std::string> tmpWayTagsMap;
     tmpWayTagsMap = wayTagsMap;
     ///< extend way tags according to swallowed lines;
-    if (tmpWayTagsMap.count("lanes")) {
-        std::string laneNum    = tmpWayTagsMap.at("lanes");
+    if (tmpWayTagsMap.count("lanes"))
+    {
+        std::string laneNum = tmpWayTagsMap.at("lanes");
         tmpWayTagsMap["lanes"] = std::to_string(std::atoi(laneNum.c_str()) * 2);
-    } else {
+    } else
+    {
         ///< add default laneNum
         tmpWayTagsMap.insert(std::make_pair("lanes", std::to_string(this->m_defaultLaneNum.at(tmpWayTagsMap.at("highway")) * 2)));
     }
     ///< if there is no "oneway" tag that means the way is a bidirectional way.
-    if (tmpWayTagsMap.count("oneway")) {
+    if (tmpWayTagsMap.count("oneway"))
+    {
         tmpWayTagsMap["oneway"] = "no";
     }
 
     // add road level tag
-    for (const auto& tags : tmpWayTagsMap) {
+    for (const auto &tags: tmpWayTagsMap)
+    {
         tl_builder.add_tag(tags.first, tags.second);
     }
 }
-void OSMManager::addFinalNodeTags(osmium::memory::Buffer& buffer, osmium::builder::Builder* builder) {
+void OSMManager::addFinalNodeTags(osmium::memory::Buffer &buffer, osmium::builder::Builder *builder)
+{
     osmium::builder::TagListBuilder tl_builder{this->m_nodeBuffer, builder};
     tl_builder.add_tag("highway", "traffic_signals");
     tl_builder.add_tag("traffic_signals", "traffic_lights");

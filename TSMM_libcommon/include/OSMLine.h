@@ -10,11 +10,12 @@
 
 #include <memory>
 
-class OSMLine {
+class OSMLine
+{
 public:
     typedef std::shared_ptr<OSMLine> ptr;
 
-    OSMLine(Road::Line::id_t id, std::vector<OSMWay::ptr>& wayObjs, std::map<std::string, std::string>& lineTags);
+    OSMLine(Road::Line::id_t id, std::vector<OSMWay::ptr> &wayObjs, std::map<std::string, std::string> &lineTags);
 
     OSMLine();
 
@@ -23,18 +24,18 @@ public:
     ///< get methods
     const Road::Line::id_t getLineId();
 
-    const std::vector<OSMWay::ptr>& getWayObjs();
+    const std::vector<OSMWay::ptr> &getWayObjs();
 
-    const std::map<std::string, std::string>& getLineTags();
+    const std::map<std::string, std::string> &getLineTags();
 
     const double getLineLength();
 
-    const std::map<Road::Line::id_t, OSMLine::ptr>& getSwallowedLines();
+    const std::map<Road::Line::id_t, OSMLine::ptr> &getSwallowedLines();
 
     ///< set methods
 
     ///< update methods
-    void updateWayObjs(const std::vector<OSMWay::ptr>&);
+    void updateWayObjs(const std::vector<OSMWay::ptr> &);
     ///< add methods
     void addSwallowedLine(Road::Line::id_t lineId, OSMLine::ptr lineObj);
 
@@ -42,10 +43,6 @@ public:
     void deleteWayFromHead(int elementNum);
     void deleteWayFromTail(int elementNum);
 
-
-    void insertWayObj(int insertPos, OSMWay::ptr wayObj);
-
-    void deleteWayObj(int insertPos, OSMWay::ptr wayObj);
 
 private:
     void calLineLength();
@@ -59,4 +56,4 @@ private:
     std::map<Road::Line::id_t, OSMLine::ptr> m_swallowedLines;
 };
 
-#endif // BENCHMARK_OSMLINE_H
+#endif// BENCHMARK_OSMLINE_H

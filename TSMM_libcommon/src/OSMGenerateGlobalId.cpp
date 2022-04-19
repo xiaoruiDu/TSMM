@@ -3,48 +3,39 @@
 //
 
 #include "OSMGenerateGlobalId.h"
-OSMGenerateGlobalId* OSMGenerateGlobalId::instance = nullptr;
+OSMGenerateGlobalId *OSMGenerateGlobalId::instance = nullptr;
 
-OSMGenerateGlobalId::OSMGenerateGlobalId() {
-    this->newNodeId   = 0;
+OSMGenerateGlobalId::OSMGenerateGlobalId()
+{
+    this->newNodeId = 0;
     this->newSubwayId = 0;
 }
 
-OSMGenerateGlobalId* OSMGenerateGlobalId::getInstance() {
-    if (!instance) {
+OSMGenerateGlobalId *OSMGenerateGlobalId::getInstance()
+{
+    if (!instance)
+    {
         instance = new OSMGenerateGlobalId();
     }
     return instance;
 }
 
-Road::Node::id_t OSMGenerateGlobalId::getNewNodeId() {
+Road::Node::id_t OSMGenerateGlobalId::getNewNodeId()
+{
     newNodeId += 1;
     return newNodeId;
 }
 
-Road::SubWay::id_t OSMGenerateGlobalId::getNewSubwayId() {
+Road::SubWay::id_t OSMGenerateGlobalId::getNewSubwayId()
+{
     newSubwayId += 1;
     return newSubwayId;
 }
 
-void OSMGenerateGlobalId::deleteInstance() {
-    if (instance) {
+void OSMGenerateGlobalId::deleteInstance()
+{
+    if (instance)
+    {
         delete instance;
     }
 }
-
-///* Null, because instance will be initialized on demand. */
-// Singleton* Singleton::instance = 0;
-//
-// Singleton* Singleton::getInstance()
-//{
-//     if (instance == 0)
-//     {
-//         instance = new Singleton();
-//     }
-//
-//     return instance;
-// }
-//
-// Singleton::Singleton()
-//{}
