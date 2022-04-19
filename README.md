@@ -36,7 +36,7 @@
     ```commandline
     make -j4
     ```
-- 2-4 executable can be found in the build folder
+- 2-4 executable binay file can be found in the build folder
     ```commandline
     ./tsmm
     
@@ -44,9 +44,8 @@
 
 ## 3- Output
 
-After running **./tsmm** you can get all intermediate results in outputOSM folder, and **12_final__allLayer.som** is
-the final simplified road network. You can find the detailed infomation on these intermediate
-resutls in our [paper](paper/paper.pdf).
+After running **./tsmm** you can get all intermediate results in output folder, and **12_final__allLayer.osm** is
+the final simplified road network. You can find the detailed information on our [paper](paper/paper.pdf).
 
 - 01_link_ways__allLayer.osm
 - 02_first_buffer__allLayer.osm
