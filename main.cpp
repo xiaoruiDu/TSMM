@@ -24,7 +24,7 @@ using location_handler_type = osmium::handler::NodeLocationsForWays<index_type>;
 
 int main(int argc, char* argv[]) {
 
-    std::string osmPath = "/home/xiaorui/PHD/TSMM_git/TSMM/binjiang_qgis.osm";  /// change it to your osm Path
+    std::string osmPath = "/home/xiaorui/PHD/TSMM/test_map_1.osm";  /// change it to your osm Path
     OSMManager* osmManager = new OSMManager(osmPath);
     osmManager->initialize();
     delete osmManager;
