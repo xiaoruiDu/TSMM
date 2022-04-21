@@ -28,10 +28,6 @@ OSMSubWay::OSMSubWay(Road::Way::id_t parentId,
 
     //    this->m_subWayId2SubWayObj.insert(std::pair<Road::SubWay::id_t, OSMSubWay::ptr>(this->m_globalId, this));
     this->calSubwayLength();
-    if (this->m_globalId == 4453) {
-        std::cout << "megh"
-                  << "\n";
-    }
 }
 
 const OSMNode::ptr OSMSubWay::getFromNodeRefObj() {
@@ -42,9 +38,6 @@ const OSMNode::ptr OSMSubWay::getToNodeRefObj() {
     return this->m_toNodeRefObj;
 }
 
-// const Road::SubWay::id_t OSMSubWay::getSubwayLocalId() {
-//     return this->m_localId;
-// }
 
 const Road::SubWay::id_t OSMSubWay::getSubwayGlobalId() {
     return this->m_globalId;

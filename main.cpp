@@ -1,5 +1,4 @@
 
-
 #include <iostream>
 // Allow any format of input files (XML, PBF, ...)
 #include <osmium/io/any_input.hpp>
@@ -24,8 +23,9 @@ using location_handler_type = osmium::handler::NodeLocationsForWays<index_type>;
 
 int main(int argc, char* argv[]) {
 
-    std::string osmPath = "/home/xiaorui/PHD/TSMM/test_map_1.osm";  /// change it to your osm Path
+    std::string osmPath = "../test_map_2.osm";
     OSMManager* osmManager = new OSMManager(osmPath);
     osmManager->initialize();
+    osmManager->run();
     delete osmManager;
 }
