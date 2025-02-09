@@ -9,7 +9,7 @@ add_definitions(-DQT_NO_KEYWORDS) # required for better error messages
 include_directories(3rd)
 
 add_subdirectory(src)
-
+dsagdasg
 
 
 print_disabled_features(fas
