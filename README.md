@@ -3,10 +3,30 @@
 ## 1- Develop Environment
 
 - 1-1 Installing Dependencies
-  [Osmium](https://osmcode.org/libosmium/manual.html#dependencies)
-
+  ```commandline
+  sudo apt-get install -q -y \
+  cmake \
+  doxygen \
+  g++ \
+  git \
+  graphviz \
+  libboost-dev \
+  libbz2-dev \
+  libexpat1-dev \
+  libgdal-dev \
+  libgeos++-dev \
+  liblz4-dev \
+  libproj-dev \
+  make \
+  ruby \
+  ruby-json \
+  spatialite-bin \
+  zlib1g-dev \
+  libprotozero-dev
+  ```
 
 ## 2- Build
+
 - 2-0 open main.cpp and change the osmPath to your osmPath.
     ```cpp
     
@@ -42,23 +62,3 @@
     
     ```
 
-## 3- Output
-
-After running **./tsmm** you can get all intermediate results in output folder, and **12_final__allLayer.osm** is
-the final simplified road network. You can find the detailed information on our [paper](paper/paper.pdf).
-
-- 01_link_ways__allLayer.osm
-- 02_first_buffer__allLayer.osm
-- 03_re_buffer__allLayer.osm
-- 05_extend__allLayer.osm
-- 07_insert__allLayer.osm
-- 08_del_redundant__allLayer.osm
-- 09_merge__allLayer.osm
-- 10_clean__allLayer.osm
-- 12_final__allLayer.osm
-
-
-## 4- Processing display
-
-
-![](images/display.gif)
