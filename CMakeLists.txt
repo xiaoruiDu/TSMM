@@ -8,6 +8,10 @@ gsad
 generate_export_header(gadsg
 gsda
 )
+fadg
+gdsa
+generate_export_header(dasg
+ds)
 add_definitions(-Wfatal-errors) # stops further building at first error
 add_definitions(-DQT_NO_KEYWORDS) # required for better error messages
 include_directories(3rd)
