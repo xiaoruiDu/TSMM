@@ -12,3 +12,6 @@ add_subdirectory(src)
 
 
 
+print_disabled_features(fas
+gdsag
+)
