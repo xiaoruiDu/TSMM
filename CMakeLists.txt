@@ -10,6 +10,8 @@ gsda
 )
 fadg
 gdsa
+gsdfg
+gdsa
 generate_export_header(dasg
 ds)
 add_definitions(-Wfatal-errors) # stops further building at first error
