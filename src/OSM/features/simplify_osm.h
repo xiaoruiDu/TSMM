@@ -6,6 +6,7 @@
 #include <processor/OSMProcessorBase.h>
 #include <processor/bufferWays.h>
 #include <processor/linkWays.h>
+#include <processor/OSMParser.h>
 
 
 namespace TSMM::OSM
@@ -14,19 +15,30 @@ namespace TSMM::OSM
     class SimplifyOSM
     {
         OSMMap *map_;
-        Conf *conf_;
+        Conf conf_;
+
 
     public:
-        explicit SimplifyOSM(Conf &conf) : map_(nullptr), conf_(nullptr)
+        explicit SimplifyOSM(Conf &conf) : map_(nullptr), conf_(std::move(conf))
         {
-            // load osm file with osmium lib, and generate OSMMap
-            // load config for specific tweak while processing
+            map_ = new OSMMap();
+            try
+            {
+                osmium::io::Reader reader(conf_.inPath_, osmium::osm_entity_bits::node | osmium::osm_entity_bits::way | osmium::osm_entity_bits::relation);
+                auto osmParser = OSMParser(map_);
+                osmium::apply(reader, osmParser);
+                reader.close();
+            }catch (const std::exception& e)
+            {
+                std::cerr << "Error: Failed to open OSM file '" << conf_.inPath_ << "'.\n";
+                std::cerr << "Exception: " << e.what() << "\n";
+                exit(1);  // Exit with error code
+            }
         }
 
         ~SimplifyOSM()
         {
             delete map_;
-            delete conf_;
         }
 
         void process()
@@ -42,7 +54,7 @@ namespace TSMM::OSM
             for (auto &pipe: processPipeLine)
                 pipe->process(*map_);
 
-            map_->store(conf_->outPath_);
+            map_->saveToOSM(conf_.outPath_);
         }
     };
 
