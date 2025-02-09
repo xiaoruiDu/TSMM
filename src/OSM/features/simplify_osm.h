@@ -3,10 +3,10 @@
 
 #include <features/conf.h>
 #include <map/OSMMap.h>
+#include <processor/OSMParser.h>
 #include <processor/OSMProcessorBase.h>
 #include <processor/bufferWays.h>
 #include <processor/linkWays.h>
-#include <processor/OSMParser.h>
 
 
 namespace TSMM::OSM
@@ -28,11 +28,11 @@ namespace TSMM::OSM
                 auto osmParser = OSMParser(map_);
                 osmium::apply(reader, osmParser);
                 reader.close();
-            }catch (const std::exception& e)
+            } catch (const std::exception &e)
             {
                 std::cerr << "Error: Failed to open OSM file '" << conf_.inPath_ << "'.\n";
                 std::cerr << "Exception: " << e.what() << "\n";
-                exit(1);  // Exit with error code
+                exit(1);// Exit with error code
             }
         }
 
