@@ -3,25 +3,25 @@
 
 #include <features/conf.h>
 #include <map/OSMMap.h>
+#include <memory>
 #include <processor/OSMParser.h>
 #include <processor/OSMProcessorBase.h>
 #include <processor/bufferWays.h>
 #include <processor/linkWays.h>
-
 
 namespace TSMM::OSM
 {
 
     class SimplifyOSM
     {
-        OSMMap *map_;
+        std::shared_ptr<OSMMap> map_;
         Conf conf_;
 
 
     public:
         explicit SimplifyOSM(Conf &conf) : map_(nullptr), conf_(std::move(conf))
         {
-            map_ = new OSMMap();
+            map_ = std::make_shared<OSMMap>();
             try
             {
                 osmium::io::Reader reader(conf_.inPath_, osmium::osm_entity_bits::node | osmium::osm_entity_bits::way | osmium::osm_entity_bits::relation);
@@ -34,11 +34,6 @@ namespace TSMM::OSM
                 std::cerr << "Exception: " << e.what() << "\n";
                 exit(1);// Exit with error code
             }
-        }
-
-        ~SimplifyOSM()
-        {
-            delete map_;
         }
 
         void process()
@@ -54,7 +49,7 @@ namespace TSMM::OSM
             for (auto &pipe: processPipeLine)
                 pipe->process(*map_);
 
-            map_->saveToOSM(conf_.outPath_);
+            map_->save(conf_.outPath_);
         }
     };
 
