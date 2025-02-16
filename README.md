@@ -27,8 +27,8 @@
 ## 2- Build
 
   ```commandline
-    git clone https://github.com/osmcode/libosmium.git
     git clone https://github.com/TSMM-DM/TSMM.git
+    git submodule update --init --recursive
     cd TSMM
     mkdir -p build
     cd build
