@@ -27,12 +27,11 @@
 ## 2- Build
 
   ```commandline
-    git clone https://github.com/TSMM-DM/TSMM.git
-    git submodule update --init --recursive
+    git clone --branch develop --recursive https://github.com/TSMM-DM/TSMM.git
     cd TSMM
     mkdir -p build
     cd build
     cmake -DCMAKE_BUILD_TYPE=Release ..
-    make -j4
+    make -j$(nproc)
     ./tsmm
     ```
