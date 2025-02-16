@@ -2,7 +2,6 @@
 
 ## 1- Develop Environment
 
-- 1-1 Installing Dependencies
   ```commandline
   sudo apt-get install -q -y \
   cmake \
@@ -27,38 +26,12 @@
 
 ## 2- Build
 
-- 2-0 open main.cpp and change the osmPath to your osmPath.
-    ```cpp
-    
-    int main(int argc, char* argv[]) {
-    
-        std::string osmPath = "path_to_your_osm_file";  /// change it to your osm Path
-        OSMManager* osmManager = new OSMManager(osmPath);
-        osmManager->initialize();
-        delete osmManager;
-    }
-    
-    ```
-
-- 2-1 create a build folder
-    ```commandline
+  ```commandline
+    git clone --branch develop --recursive https://github.com/TSMM-DM/TSMM.git
+    cd TSMM
     mkdir -p build
     cd build
-    
-    ```
-- 2-2 execute <span style="color:pink">CMake</span> command.
-    ```commandline
-  cmake -DCMAKE_BUILD_TYPE=DEBUG -S ../ -B ./
-  
-  ```
-
-- 2-3 run make and wait for the build to finish
-    ```commandline
-    make -j4
-    ```
-- 2-4 executable binay file can be found in the build folder
-    ```commandline
+    cmake -DCMAKE_BUILD_TYPE=Release ..
+    make -j$(nproc)
     ./tsmm
-    
     ```
-
