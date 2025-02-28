@@ -2,12 +2,15 @@
 #define OSMMAP_H
 
 #include <iostream>
-#include <map/OSMType.h>
+#include <map/OSMNode.h>
+#include <map/OSMRelation.h>
+#include <map/OSMWay.h>
 #include <memory>
 #include <osmium/builder/osm_object_builder.hpp>
 #include <osmium/io/pbf_output.hpp>
 #include <osmium/io/xml_output.hpp>
 #include <osmium/memory/buffer.hpp>
+
 #include <unordered_map>
 
 namespace TSMM::OSM
@@ -16,9 +19,9 @@ namespace TSMM::OSM
     class OSMMap
     {
 
-        std::unordered_map<long long, std::shared_ptr<OSMType::Node>> nodes_;
-        std::unordered_map<long long, std::shared_ptr<OSMType::Way>> ways_;
-        std::unordered_map<long long, std::shared_ptr<OSMType::Relation>> relations_;
+        std::unordered_map<OSMNode::id_t, std::shared_ptr<OSMNode>> nodes_;
+        std::unordered_map<OSMWay::id_t, std::shared_ptr<OSMWay>> ways_;
+        std::unordered_map<OSMRelation::id_t, std::shared_ptr<OSMRelation>> relations_;
         osmium::memory::Buffer buffer_{10240, osmium::memory::Buffer::auto_grow::yes};
 
         void buildNodes(osmium::memory::Buffer &buffer)
@@ -30,9 +33,9 @@ namespace TSMM::OSM
                     builder.set_user("tsmm");
                     osmium::Node &obj = builder.object();
 
-                    obj.set_id(node.second->id_);
-                    obj.set_uid(node.second->id_);
-                    obj.set_location(osmium::Location{node.second->lon_, node.second->lat_});
+                    obj.set_id(node.second->id());
+                    obj.set_uid(node.second->id());
+                    obj.set_location(osmium::Location{node.second->lon(), node.second->lat()});
                 }
                 buffer.commit();
             }
@@ -42,37 +45,68 @@ namespace TSMM::OSM
         {
             for (const auto &way: ways_)
             {
+                if (way.second->isActive())
                 {
-                    osmium::builder::WayBuilder builder{buffer};
-                    builder.set_user("tsmm");
-                    osmium::Way &obj = builder.object();
+                    {
+                        osmium::builder::WayBuilder builder{buffer};
+                        builder.set_user("tsmm");
+                        osmium::Way &obj = builder.object();
 
-                    obj.set_id(way.second->id_);
-                    obj.set_uid(way.second->id_);
+                        obj.set_id(way.second->id());
+                        obj.set_uid(way.second->id());
+
+                        {
+                            ///< add node ref
+                            osmium::builder::WayNodeListBuilder wayNodeListBuilder{buffer, &builder};
+                            for (const auto &nId: way.second->nodeRefs())
+                            {
+                                osmium::Location node(nodes_[nId]->lon(), nodes_[nId]->lat());
+                                osmium::NodeRef nodeRef{nId, node};
+                                wayNodeListBuilder.add_node_ref(nodeRef);
+                            }
+                        }
+
+                        {
+                            ///< add way tags
+                            osmium::builder::TagListBuilder tl_builder{buffer, &builder};
+                            // add road level tag
+                            for (const auto &tags: way.second->tags())
+                            {
+                                tl_builder.add_tag(tags.first, tags.second);
+                            }
+                        }
+                    }
+                    buffer.commit();
                 }
-                buffer.commit();
             }
         }
+
 
         void buildRelations(osmium::memory::Buffer &buffer)
         {}
 
     public:
-        void addNode(long long id, double lat, double lon)
+        void addNode(OSMWay::id_t id, double lat, double lon)
         {
-            nodes_[id] = std::make_shared<OSMType::Node>(id, lat, lon);
+            nodes_[id] = std::make_shared<OSMNode>(id, lat, lon);
         }
 
-        void addWay(long long id)
+        void addWay(OSMWay::id_t id, std::vector<osmium::object_id_type> &nodeRef, std::unordered_map<std::string, std::string> &tags)
         {
-            ways_[id] = std::make_shared<OSMType::Way>(id);
+
+            ways_[id] = std::make_shared<OSMWay>(id, nodeRef, tags);
         }
 
-        void addRelation(long long id)
+        void addRelation(OSMRelation::id_t id)
         {
-            relations_[id] = std::make_shared<OSMType::Relation>(id);
+            relations_[id] = std::make_shared<OSMRelation>(id);
         }
 
+
+        std::unordered_map<OSMWay::id_t, std::shared_ptr<OSMWay>> ways() const
+        {
+            return ways_;
+        }
 
         void save(const std::string &path)
         {

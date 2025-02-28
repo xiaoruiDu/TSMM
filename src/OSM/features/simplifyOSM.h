@@ -7,10 +7,33 @@
 #include <processor/OSMParser.h>
 #include <processor/OSMProcessorBase.h>
 #include <processor/bufferWays.h>
+#include <processor/filterWays.h>
 #include <processor/linkWays.h>
+#include <unordered_set>
 
 namespace TSMM::OSM
 {
+
+    bool isWayFiltered(std::shared_ptr<OSMWay> &way)
+    {
+        std::string keyString = "highway";
+        std::unordered_set<std::string> leftWayTags;
+        leftWayTags.insert("motorway");
+        leftWayTags.insert("trunk");
+        leftWayTags.insert("primary");
+        leftWayTags.insert("secondary");
+        leftWayTags.insert("tertiary");
+        leftWayTags.insert("residential");
+
+        const auto waytags = way->tags();
+        if (waytags.count(keyString))
+        {
+            if (leftWayTags.count(waytags.at(keyString)))
+                return false;
+            return true;
+        }
+        return true;
+    }
 
     class SimplifyOSM
     {
@@ -34,6 +57,7 @@ namespace TSMM::OSM
                 std::cerr << "Exception: " << e.what() << "\n";
                 exit(1);// Exit with error code
             }
+            int m = 1;
         }
 
         void process()
@@ -41,8 +65,10 @@ namespace TSMM::OSM
             // specific ways to process osmmap
             // for example: linkways --> buffer ways --> store the map
             std::vector<OSMProcessorBase *> processPipeLine;
+            OSMProcessorBase *wayFilter = new FilterWays(isWayFiltered);
             OSMProcessorBase *linkWays = new LinkWays();
             OSMProcessorBase *bufferWays = new BufferWays();
+            processPipeLine.push_back(wayFilter);
             processPipeLine.push_back(linkWays);
             processPipeLine.push_back(bufferWays);
 
