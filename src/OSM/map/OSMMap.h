@@ -26,8 +26,7 @@ namespace TSMM::OSM
 
         void buildNodes(osmium::memory::Buffer &buffer)
         {
-            for (const auto &node: nodes_)
-            {
+            std::for_each(nodes_.begin(), nodes_.end(), [&](const auto &node) {
                 {
                     osmium::builder::NodeBuilder builder{buffer};
                     builder.set_user("tsmm");
@@ -38,13 +37,12 @@ namespace TSMM::OSM
                     obj.set_location(osmium::Location{node.second->lon(), node.second->lat()});
                 }
                 buffer.commit();
-            }
+            });
         }
 
         void buildWays(osmium::memory::Buffer &buffer)
         {
-            for (const auto &way: ways_)
-            {
+            std::for_each(ways_.begin(), ways_.end(), [&](const auto &way) {
                 if (way.second->isActive())
                 {
                     {
@@ -58,27 +56,25 @@ namespace TSMM::OSM
                         {
                             ///< add node ref
                             osmium::builder::WayNodeListBuilder wayNodeListBuilder{buffer, &builder};
-                            for (const auto &nId: way.second->nodeRefs())
-                            {
+                            std::for_each(way.second->nodeRefs().begin(), way.second->nodeRefs().end(), [&](const auto &nId) {
                                 osmium::Location node(nodes_[nId]->lon(), nodes_[nId]->lat());
                                 osmium::NodeRef nodeRef{nId, node};
                                 wayNodeListBuilder.add_node_ref(nodeRef);
-                            }
+                            });
                         }
 
                         {
                             ///< add way tags
                             osmium::builder::TagListBuilder tl_builder{buffer, &builder};
                             // add road level tag
-                            for (const auto &tags: way.second->tags())
-                            {
+                            std::for_each(way.second->tags().begin(), way.second->tags().end(), [&](const auto &tags) {
                                 tl_builder.add_tag(tags.first, tags.second);
-                            }
+                            });
                         }
                     }
                     buffer.commit();
                 }
-            }
+            });
         }
 
 

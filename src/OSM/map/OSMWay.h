@@ -26,7 +26,7 @@ namespace TSMM::OSM
 
         id_t id() const { return id_; }
 
-        void deactive() { isActive_ = false; }
+        void deactivate() { isActive_ = false; }
         bool isActive() const { return isActive_; }
 
         const std::unordered_map<std::string, std::string> &tags() const
@@ -34,7 +34,7 @@ namespace TSMM::OSM
             return tags_;
         }
 
-        const std::vector<osmium::object_id_type>& nodeRefs() const
+        const std::vector<osmium::object_id_type> &nodeRefs() const
         {
             return nodeRefs_;
         }

@@ -29,10 +29,13 @@ namespace TSMM::OSM
         {
             std::vector<osmium::object_id_type> nodeRef;
             std::unordered_map<std::string, std::string> tags;
-            for (const auto &node_ref: way.nodes())
+            std::for_each(way.nodes().begin(), way.nodes().end(), [&](const auto &node_ref) {
                 nodeRef.push_back(node_ref.ref());// Store only node IDs
-            for (const auto &tag: way.tags())
+            });
+
+            std::for_each(way.tags().begin(), way.tags().end(), [&](const auto &tag) {
                 tags.insert(std::make_pair(tag.key(), tag.value()));
+            });
 
             map_->addWay(way.id(), nodeRef, tags);
         }

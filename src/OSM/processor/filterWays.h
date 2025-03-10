@@ -19,16 +19,13 @@ namespace TSMM::OSM
 
         void process(OSMMap &map) override
         {
-
-            for (auto &way: map.ways())
-            {
-                if (callBack_(way.second))
-                    way.second->deactive();
-            }
+            std::for_each(map.ways().begin(), map.ways().end(), [&](auto &pair) {
+                if (callBack_(pair.second))
+                    pair.second->deactivate();
+            });
         }
 
     private:
-        std::vector<std::string> targetTags_;
         CallBack callBack_;
     };
 

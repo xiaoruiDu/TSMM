@@ -13,18 +13,11 @@
 
 namespace TSMM::OSM
 {
+    static inline std::unordered_set<std::string> leftWayTags{"motorway", "trunk", "primary", "secondary", "tertiary", "residential"};
 
     bool isWayFiltered(std::shared_ptr<OSMWay> &way)
     {
         std::string keyString = "highway";
-        std::unordered_set<std::string> leftWayTags;
-        leftWayTags.insert("motorway");
-        leftWayTags.insert("trunk");
-        leftWayTags.insert("primary");
-        leftWayTags.insert("secondary");
-        leftWayTags.insert("tertiary");
-        leftWayTags.insert("residential");
-
         const auto waytags = way->tags();
         if (waytags.count(keyString))
         {
@@ -42,9 +35,8 @@ namespace TSMM::OSM
 
 
     public:
-        explicit SimplifyOSM(Conf &conf) : map_(nullptr), conf_(std::move(conf))
+        explicit SimplifyOSM(Conf &conf) : map_(std::make_shared<OSMMap>()), conf_(std::move(conf))
         {
-            map_ = std::make_shared<OSMMap>();
             try
             {
                 osmium::io::Reader reader(conf_.inPath_, osmium::osm_entity_bits::node | osmium::osm_entity_bits::way | osmium::osm_entity_bits::relation);
@@ -57,7 +49,6 @@ namespace TSMM::OSM
                 std::cerr << "Exception: " << e.what() << "\n";
                 exit(1);// Exit with error code
             }
-            int m = 1;
         }
 
         void process()
@@ -72,9 +63,7 @@ namespace TSMM::OSM
             processPipeLine.push_back(linkWays);
             processPipeLine.push_back(bufferWays);
 
-            for (auto &pipe: processPipeLine)
-                pipe->process(*map_);
-
+            std::for_each(processPipeLine.begin(), processPipeLine.end(), [&](auto &pipe) { pipe->process(*map_); });
             map_->save(conf_.outPath_);
         }
     };
