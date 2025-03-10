@@ -11,6 +11,8 @@ namespace TSMM::OSM
     {
 
     public:
+        OSMProcessorBase() = default;
+        virtual ~OSMProcessorBase() = default;
         virtual void process(OSMMap &map) = 0;
     };
 }// namespace TSMM::OSM

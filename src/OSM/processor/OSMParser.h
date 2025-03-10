@@ -27,7 +27,17 @@ namespace TSMM::OSM
 
         void way(const osmium::Way &way)
         {
-            map_->addWay(way.id());
+            std::vector<osmium::object_id_type> nodeRef;
+            std::unordered_map<std::string, std::string> tags;
+            std::for_each(way.nodes().begin(), way.nodes().end(), [&](const auto &node_ref) {
+                nodeRef.push_back(node_ref.ref());// Store only node IDs
+            });
+
+            std::for_each(way.tags().begin(), way.tags().end(), [&](const auto &tag) {
+                tags.insert(std::make_pair(tag.key(), tag.value()));
+            });
+
+            map_->addWay(way.id(), nodeRef, tags);
         }
 
         void relation(const osmium::Relation &relation)
